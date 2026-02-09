@@ -1,13 +1,24 @@
 {
   "name": "facturacion-hrs-con-mongo",
   "version": "1.0.0",
+  "description": "��#\u0000 \u0000h\u0000a\u0000s\u0000h\u0000r\u0000a\u0000t\u0000e\u0000\r\u0000 \u0000#\u0000 \u0000h\u0000a\u0000s\u0000h\u0000r\u0000a\u0000t\u0000e\u0000\r\u0000 \u0000#\u0000 \u0000h\u0000a\u0000s\u0000h\u0000r\u0000a\u0000t\u0000e\u0000\r\u0000 \u0000",
+  "keywords": [],
+  "homepage": "https://github.com/jlvilasoler/hashrate#readme",
+  "bugs": {
+    "url": "https://github.com/jlvilasoler/hashrate/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlvilasoler/hashrate.git"
+  },
+  "license": "ISC",
+  "author": "",
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "start": "node ./src/app.js",
     "dev": "nodemon ./src/app.js"
   },
-  "description": "",
-  "main": "index.js",
   "dependencies": {
     "accepts": "^2.0.0",
     "ansi-regex": "^6.2.2",
@@ -175,7 +186,5 @@
     "ws": "^8.18.3",
     "xtend": "^4.0.2"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "devDependencies": {}
 }
