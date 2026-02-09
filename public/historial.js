@@ -39,7 +39,7 @@ function mostrarFacturasEnTabla(facturas) {
                 <td>${mesFormato}</td>
                 <td class="fw-bold">$ ${parseFloat(factura.total).toFixed(2)}</td>
                 <td class="text-center">
-                    <button class="btn btn-info btn-action btn-sm" onclick="descargarFactura(${index})" title="Descargar PDF">
+                    <button class="btn btn-primary btn-action btn-sm" onclick="descargarFactura(${index})" title="Descargar PDF">
                         📥
                     </button>
                     <button class="btn btn-warning btn-action btn-sm" onclick="verDetalles(${index})" title="Ver detalles">
@@ -83,9 +83,53 @@ function limpiarFiltros() {
 /* --- ACCIONES SOBRE FACTURAS --- */
 function descargarFactura(index) {
     const factura = facturasOriginales[index];
-    // Aquí iría la lógica para regenerar el PDF usando jsPDF
-    // Por ahora mostramos un mensaje
-    mostrarAlerta("📥", "Descargando...", `Se está descargando ${factura.numero}`);
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const tipo = factura.numero.startsWith("FC-") ? "FACTURA" : "RECIBO";
+        const fecha = new Date(factura.fecha).toLocaleDateString('es-ES');
+        
+        // Encabezado
+        doc.setFontSize(20);
+        doc.text("HASHRATE SPACE", 105, 20, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.text(`Tipo: ${tipo} | Número: ${factura.numero}`, 20, 35);
+        doc.text(`Fecha: ${fecha}`, 20, 42);
+        doc.text(`Cliente: ${factura.cliente}`, 20, 49);
+        
+        // Servicios
+        let y = 65;
+        doc.setFont(undefined, 'bold');
+        doc.text("Descripción", 20, 60);
+        doc.text("Monto", 170, 60);
+        doc.setFont(undefined, 'normal');
+        
+        if (factura.servicios && factura.servicios.length > 0) {
+            factura.servicios.forEach(s => {
+                doc.text(s.concepto.substring(0, 50), 20, y);
+                doc.text(`$ ${parseFloat(s.monto).toFixed(2)}`, 170, y);
+                y += 8;
+            });
+        } else {
+            doc.text("(Sin detalles de servicios)", 20, y);
+            y += 8;
+        }
+        
+        // Total
+        doc.line(20, y, 190, y);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text(`TOTAL FINAL: $ ${parseFloat(factura.total).toFixed(2)}`, 190, y + 12, { align: "right" });
+        
+        // Descargar
+        doc.save(`${factura.numero}_${factura.cliente.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+        mostrarAlerta("✅", "Descargado", `${factura.numero} descargado correctamente`);
+    } catch (error) {
+        console.error(error);
+        mostrarAlerta("❌", "Error", `No se pudo descargar ${factura.numero}`);
+    }
 }
 
 function verDetalles(index) {
