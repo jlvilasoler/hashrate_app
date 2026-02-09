@@ -68,7 +68,13 @@ function filtrarClientes() {
     });
 }
 
-function seleccionarCliente() { }
+function seleccionarCliente() {
+    const cliSelect = document.getElementById("clienteSelect");
+    const cliente = cliSelect.options[cliSelect.selectedIndex]?.text;
+    if (cliente && !cliente.includes("INDICAR CLIENTE")) {
+        console.log("Cliente seleccionado: " + cliente);
+    }
+}
 
 /* --- MANEJO DE SERVICIOS --- */
 function agregarServicio() {

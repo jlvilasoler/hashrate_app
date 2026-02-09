@@ -1,21 +1,25 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+const publicPath = path.join(__dirname, '../public');
 
-// IMPORTANTE: Koyeb asigna el puerto automáticamente. 
-// Usamos process.env.PORT para leerlo, y 8080 como respaldo local.
-const PORT = process.env.PORT || 8080;
+app.use(express.json()); // PARA PODER MANIPULAR JSON , NOS PERMITE RECIBIR EL JSON MEDIANTE POST
+app.use(express.urlencoded({ extended: true})); 
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use('/static', express.static('./public'));
-
-// Ruta de prueba para saber que funciona
+// Route for home page
 app.get('/', (req, res) => {
-    res.send("¡Servidor de Facturación funcionando en Koyeb!");
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// IMPORTANTE: Escuchar en '0.0.0.0' para que sea accesible externamente
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server on port ${PORT}`);
+// Route for facturacion page
+app.get('/facturacion', (req, res) => {
+  res.sendFile(path.join(publicPath, 'facturacion.html'));
 });
+
+// Serve static files after routes
+app.use(express.static(publicPath));
+
+app.listen(8080, () => console.log("Server on port 8080"));
