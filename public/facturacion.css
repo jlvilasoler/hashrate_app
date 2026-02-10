@@ -43,21 +43,18 @@
     transform: none !important;
 }
 
+
 .faja-logo img {
     width: 100%;
     height: 100%;
-
     object-fit: cover;
-    object-position: center;
 
-    /* 🔥 Elimina cualquier animación o transición */
+    /* ✅ QUITAR EFECTOS RAROS */
     animation: none !important;
     transition: none !important;
     transform: none !important;
-
-    /* 🔥 Evita efectos raros de aparición */
-    opacity: 1 !important;
 }
+
 
         .header-fino-ancho { 
             background: rgba(255, 255, 255, 0.85);
