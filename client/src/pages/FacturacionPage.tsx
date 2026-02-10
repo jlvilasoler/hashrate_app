@@ -6,13 +6,13 @@ import { defaultClients, serviceCatalog } from "../lib/constants";
 import { generateFacturaPdf, loadImageAsBase64 } from "../lib/generateFacturaPdf";
 import { loadInvoices, saveInvoices } from "../lib/storage";
 import type { ComprobanteType, Invoice, LineItem } from "../lib/types";
+import "../styles/facturacion.css";
 
 function todayLocale() {
   return new Date().toLocaleDateString();
 }
 
 function genId() {
-  // good enough for local usage; server will replace with Mongo _id later
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
@@ -84,7 +84,6 @@ export function FacturacionPage() {
     if (hist.length === 0) return;
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet("Historial");
-
     ws.columns = [
       { header: "Número", key: "number", width: 14 },
       { header: "Tipo", key: "type", width: 10 },
@@ -95,25 +94,9 @@ export function FacturacionPage() {
       { header: "Descuentos", key: "discounts", width: 12 },
       { header: "Total", key: "total", width: 12 }
     ];
-
-    hist.forEach((inv) => {
-      ws.addRow({
-        number: inv.number,
-        type: inv.type,
-        clientName: inv.clientName,
-        date: inv.date,
-        month: inv.month,
-        subtotal: inv.subtotal,
-        discounts: inv.discounts,
-        total: inv.total
-      });
-    });
-
+    hist.forEach((inv) => ws.addRow(inv));
     ws.getRow(1).font = { bold: true };
-
-    wb.xlsx.writeBuffer().then((buf) => {
-      saveAs(new Blob([buf]), "HRS_Historial.xlsx");
-    });
+    wb.xlsx.writeBuffer().then((buf) => saveAs(new Blob([buf]), "HRS_Historial.xlsx"));
   }
 
   async function generatePdfAndSave() {
@@ -135,30 +118,19 @@ export function FacturacionPage() {
     const dateStr = todayLocale();
     const month = items[0]!.month;
 
-    // Cargar logo y faja HRS para el PDF a color (mismo diseño que la factura de referencia)
     let logoBase64: string | undefined;
     let fajaBase64: string | undefined;
     try {
       logoBase64 = await loadImageAsBase64("/images/LOGO-FACTURA-1.png");
       fajaBase64 = await loadImageAsBase64("/images/FAJA-ABAJO-HRS.png");
     } catch {
-      // Si falla la carga (ej. en tests), se genera sin imágenes
+      //
     }
 
     const doc = generateFacturaPdf(
-      {
-        number,
-        type,
-        clientName,
-        date: dateNow,
-        items,
-        subtotal,
-        discounts,
-        total,
-      },
+      { number, type, clientName, date: dateNow, items, subtotal, discounts, total },
       { logoBase64, fajaBase64 }
     );
-
     const safeName = clientName.replace(/[^\w\s-]/g, "").replace(/\s+/g, " ").trim() || "cliente";
     doc.save(`${number}_${safeName}.pdf`);
 
@@ -174,209 +146,207 @@ export function FacturacionPage() {
       total,
       items
     };
-
     const hist = loadInvoices();
     hist.push(inv);
     saveInvoices(hist);
-
-    // reset for next
     setItems([]);
   }
 
   return (
-    <div className="container py-5">
-      <div className="hrs-card p-4">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h2 className="m-0">Facturación</h2>
-          <Link to="/" className="btn btn-outline-secondary btn-sm">
-            ← Volver
+    <div className="fact-page">
+      <div className="container">
+        <header className="fact-topbar">
+          <h1>Facturación</h1>
+          <Link to="/" className="fact-back">
+            ← Volver al inicio
           </Link>
-        </div>
+        </header>
 
-        <div className="row g-3">
-          <div className="col-lg-3">
-            <div className="card p-3">
-              <h6 className="fw-bold mb-3 border-bottom pb-2">⚙️ Configuración</h6>
-
-              <div className="mb-3">
-                <label className="form-label small fw-bold">Comprobante</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={type}
-                  onChange={(e) => setType(e.target.value as ComprobanteType)}
-                >
-                  <option value="Factura">Factura</option>
-                  <option value="Recibo">Recibo</option>
-                </select>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label small fw-bold">N° Correlativo</label>
-                <input className="form-control form-control-sm text-center" readOnly value={number} />
-              </div>
-
-              <div className="mb-2">
-                <label className="form-label small fw-bold">Cliente</label>
-                <input
-                  className="form-control form-control-sm mb-2"
-                  placeholder="Filtrar cliente..."
-                  value={clientQuery}
-                  onChange={(e) => setClientQuery(e.target.value)}
-                />
-                <select
-                  className="form-select form-select-sm"
-                  size={8}
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                >
-                  {visibleClients.map((c) => {
-                    const label = c.code === "INDICAR" ? c.name : `${c.code} - ${c.name}`;
-                    const value = c.code === "INDICAR" ? c.name : `${c.code} - ${c.name}`;
-                    return (
-                      <option key={c.code} value={value}>
-                        {label}
-                      </option>
-                    );
-                  })}
-                </select>
+        <div className="fact-layout">
+          {/* Panel configuración */}
+          <aside className="fact-sidebar">
+            <div className="fact-card">
+              <div className="fact-card-header">Nueva factura</div>
+              <div className="fact-card-body">
+                <div className="fact-field">
+                  <label className="fact-label">Tipo de comprobante</label>
+                  <select
+                    className="fact-select"
+                    value={type}
+                    onChange={(e) => setType(e.target.value as ComprobanteType)}
+                  >
+                    <option value="Factura">Factura</option>
+                    <option value="Recibo">Recibo</option>
+                  </select>
+                </div>
+                <div className="fact-field">
+                  <label className="fact-label">Número</label>
+                  <input className="fact-input" readOnly value={number} />
+                </div>
+                <div className="fact-field">
+                  <label className="fact-label">Cliente</label>
+                  <input
+                    className="fact-input"
+                    type="text"
+                    placeholder="Buscar por nombre o código..."
+                    value={clientQuery}
+                    onChange={(e) => setClientQuery(e.target.value)}
+                  />
+                  <select
+                    className="fact-select"
+                    size={8}
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    style={{ marginTop: "0.5rem" }}
+                  >
+                    {visibleClients.map((c) => {
+                      const label = c.code === "INDICAR" ? c.name : `${c.code} - ${c.name}`;
+                      const value = c.code === "INDICAR" ? c.name : `${c.code} - ${c.name}`;
+                      return (
+                        <option key={c.code} value={value}>
+                          {label}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          </aside>
 
-          <div className="col-lg-9">
-            <div className="card p-3">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="fw-bold mb-0">🛠️ Detalle de servicios</h6>
-                <button className="btn btn-dark btn-sm px-3" onClick={addItem}>
-                  + Agregar Ítem
-                </button>
-              </div>
+          {/* Contenido principal */}
+          <main className="fact-main">
+            <div className="fact-card">
+              <div className="fact-card-body">
+                <div className="fact-section-header">
+                  <h2 className="fact-section-title">Detalle de servicios</h2>
+                  <button type="button" className="fact-btn-add" onClick={addItem}>
+                    + Agregar ítem
+                  </button>
+                </div>
 
-              <div className="table-responsive">
-                <table className="table table-hover align-middle" style={{ tableLayout: "fixed", width: "100%" }}>
-                  <thead className="table-light">
-                    <tr className="small text-uppercase text-center" style={{ fontSize: "0.75rem" }}>
-                      <th style={{ width: "35%" }}>Servicio</th>
-                      <th style={{ width: "18%" }}>Mes</th>
-                      <th style={{ width: "10%" }}>Cant.</th>
-                      <th style={{ width: "12%" }}>Precio</th>
-                      <th style={{ width: "10%" }}>Desc.</th>
-                      <th style={{ width: "12%" }}>Total</th>
-                      <th style={{ width: "40px" }} />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.length === 0 ? (
+                <div className="fact-table-wrap">
+                  <table className="fact-table">
+                    <thead>
                       <tr>
-                        <td colSpan={7} className="text-center text-muted py-4">
-                          <small>Agregá un ítem para comenzar</small>
-                        </td>
+                        <th>Servicio</th>
+                        <th className="fact-cell-center">Mes</th>
+                        <th className="fact-cell-center">Cant.</th>
+                        <th className="fact-cell-center">Precio</th>
+                        <th className="fact-cell-center">Desc.</th>
+                        <th className="fact-cell-center">Total</th>
+                        <th style={{ width: 48 }} />
                       </tr>
-                    ) : (
-                      items.map((it, idx) => {
-                        const lineTotal = (it.price - it.discount) * it.quantity;
-                        return (
-                          <tr key={idx}>
-                            <td>
-                              <select
-                                className="form-select form-select-sm"
-                                value={it.serviceKey}
-                                onChange={(e) => {
-                                  const key = e.target.value as LineItem["serviceKey"];
-                                  const def = serviceCatalog[key];
-                                  updateItem(idx, { serviceKey: key, serviceName: def.name, price: def.price });
-                                }}
-                              >
-                                <option value="A">{serviceCatalog.A.name}</option>
-                                <option value="B">{serviceCatalog.B.name}</option>
-                                <option value="C">{serviceCatalog.C.name}</option>
-                              </select>
-                            </td>
-                            <td>
-                              <input
-                                type="month"
-                                className="form-control form-control-sm"
-                                value={it.month}
-                                onChange={(e) => updateItem(idx, { month: e.target.value })}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                className="form-control form-control-sm text-center"
-                                min={1}
-                                value={it.quantity}
-                                onChange={(e) => updateItem(idx, { quantity: Math.max(1, Number(e.target.value || 1)) })}
-                              />
-                            </td>
-                            <td>
-                              <input className="form-control form-control-sm text-center" readOnly value={it.price} />
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                className="form-control form-control-sm text-center"
-                                min={0}
-                                value={it.discount}
-                                onChange={(e) => updateItem(idx, { discount: Math.max(0, Number(e.target.value || 0)) })}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm fw-bold text-center"
-                                readOnly
-                                value={lineTotal.toFixed(2)}
-                              />
-                            </td>
-                            <td className="text-center">
-                              <button className="btn btn-sm btn-link text-danger p-0" onClick={() => removeItem(idx)}>
-                                <strong style={{ fontSize: "1.2rem" }}>&times;</strong>
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                    </thead>
+                    <tbody>
+                      {items.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="fact-empty">
+                            <div className="fact-empty-icon">📋</div>
+                            <div className="fact-empty-text">Agregá tu primer ítem para armar la factura</div>
+                          </td>
+                        </tr>
+                      ) : (
+                        items.map((it, idx) => {
+                          const lineTotal = (it.price - it.discount) * it.quantity;
+                          return (
+                            <tr key={idx}>
+                              <td>
+                                <select
+                                  className="fact-select"
+                                  style={{ padding: "0.4rem 0.6rem", fontSize: "0.8125rem" }}
+                                  value={it.serviceKey}
+                                  onChange={(e) => {
+                                    const key = e.target.value as LineItem["serviceKey"];
+                                    const def = serviceCatalog[key];
+                                    updateItem(idx, { serviceKey: key, serviceName: def.name, price: def.price });
+                                  }}
+                                >
+                                  <option value="A">{serviceCatalog.A.name}</option>
+                                  <option value="B">{serviceCatalog.B.name}</option>
+                                  <option value="C">{serviceCatalog.C.name}</option>
+                                </select>
+                              </td>
+                              <td className="fact-cell-center">
+                                <input
+                                  type="month"
+                                  className="fact-input"
+                                  style={{ padding: "0.4rem 0.6rem", fontSize: "0.8125rem", width: "100%" }}
+                                  value={it.month}
+                                  onChange={(e) => updateItem(idx, { month: e.target.value })}
+                                />
+                              </td>
+                              <td className="fact-cell-center">
+                                <input
+                                  type="number"
+                                  className="fact-input"
+                                  style={{ padding: "0.4rem", fontSize: "0.8125rem", width: "4rem", textAlign: "center" }}
+                                  min={1}
+                                  value={it.quantity}
+                                  onChange={(e) => updateItem(idx, { quantity: Math.max(1, Number(e.target.value || 1)) })}
+                                />
+                              </td>
+                              <td className="fact-cell-center">
+                                <input readOnly value={it.price} style={{ width: "4rem" }} />
+                              </td>
+                              <td className="fact-cell-center">
+                                <input
+                                  type="number"
+                                  className="fact-input"
+                                  style={{ padding: "0.4rem", fontSize: "0.8125rem", width: "4rem", textAlign: "center" }}
+                                  min={0}
+                                  value={it.discount}
+                                  onChange={(e) => updateItem(idx, { discount: Math.max(0, Number(e.target.value || 0)) })}
+                                />
+                              </td>
+                              <td className="fact-cell-center fact-cell-total">
+                                <input readOnly value={lineTotal.toFixed(2)} style={{ width: "4.5rem" }} />
+                              </td>
+                              <td className="fact-cell-center">
+                                <button type="button" className="fact-btn-remove" onClick={() => removeItem(idx)} title="Quitar ítem">
+                                  ×
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-            <div className="row g-3 justify-content-end mt-2">
-              <div className="col-md-3">
-                <div className="card p-3 text-center bg-white shadow-sm">
-                  <span className="text-muted fw-bold small">SUBTOTAL</span>
-                  <div className="fw-bold">{totals.subtotal.toFixed(2)}</div>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="card p-3 text-center bg-white shadow-sm">
-                  <span className="text-danger fw-bold small">DESCUENTOS</span>
-                  <div className="fw-bold text-danger">-{totals.discounts.toFixed(2)}</div>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="card p-3 text-center bg-dark text-white shadow">
-                  <span className="fw-bold small">TOTAL FINAL</span>
-                  <div className="fw-bold" style={{ fontSize: "1.6rem" }}>
-                    $ {totals.total.toFixed(2)}
-                  </div>
-                </div>
-              </div>
-            </div>
+                {items.length > 0 && (
+                  <>
+                    <div className="fact-totals">
+                      <div className="fact-total-box fact-total-sub">
+                        <span className="fact-total-label">Subtotal</span>
+                        <span className="fact-total-value">$ {totals.subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="fact-total-box fact-total-disc">
+                        <span className="fact-total-label">Descuentos</span>
+                        <span className="fact-total-value">− $ {totals.discounts.toFixed(2)}</span>
+                      </div>
+                      <div className="fact-total-box fact-total-final">
+                        <span className="fact-total-label">Total</span>
+                        <span className="fact-total-value">$ {totals.total.toFixed(2)}</span>
+                      </div>
+                    </div>
 
-            <div className="text-end mt-4 pt-2">
-              <button className="btn btn-success btn-sm px-4 me-2" onClick={exportExcel}>
-                📊 Excel
-              </button>
-              <button className="btn btn-success btn-sm px-4" onClick={generatePdfAndSave}>
-                🧾 Generar comprobante (PDF)
-              </button>
+                    <div className="fact-actions">
+                      <button type="button" className="fact-btn fact-btn-secondary" onClick={exportExcel}>
+                        Exportar Excel
+                      </button>
+                      <button type="button" className="fact-btn fact-btn-primary" onClick={generatePdfAndSave}>
+                        Generar PDF
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     </div>
   );
 }
-
