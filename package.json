@@ -2,7 +2,12 @@
   "name": "facturacion-hrs-con-mongo",
   "version": "1.0.0",
   "description": "HRS GROUP - Sistema profesional de facturación con emisión de PDF y gestión de clientes",
-  "keywords": ["facturacion", "hrs", "billing", "invoicing"],
+  "keywords": [
+    "facturacion",
+    "hrs",
+    "billing",
+    "invoicing"
+  ],
   "homepage": "https://github.com/jlvilasoler/hashrate#readme",
   "bugs": {
     "url": "https://github.com/jlvilasoler/hashrate/issues"
@@ -14,19 +19,25 @@
   "license": "ISC",
   "author": "",
   "type": "module",
-  "main": "src/app.js",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
-    "start": "node ./src/app.js",
-    "dev": "nodemon ./src/app.js"
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client && npm run build -w server",
+    "start": "npm run start -w server",
+    "legacy:dev": "nodemon ./src/app.js",
+    "legacy:start": "node ./src/app.js"
   },
-  "dependencies": {
-    "express": "^4.18.2"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "nodemon": "^3.0.2"
   },
   "engines": {
-    "node": ">=14.0.0",
-    "npm": ">=6.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
   }
 }

@@ -1,0 +1,19 @@
+import type { NextFunction, Request, Response } from "express";
+
+export function errorHandler(
+  err: unknown,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+) {
+  // Avoid leaking internals; log server-side.
+  // eslint-disable-next-line no-console
+  console.error(err);
+
+  res.status(500).json({
+    error: {
+      message: "Internal server error"
+    }
+  });
+}
+
