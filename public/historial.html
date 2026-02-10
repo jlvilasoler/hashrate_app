@@ -7,60 +7,34 @@
     <title>HRS - Historial de Facturas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
             background: linear-gradient(to bottom, #f8f9fc 0%, #f0f2f8 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             font-size: 0.95rem;
             min-height: 100vh;
         }
-
+        
         /* Header */
- .faja-logo {
-    height: 80px;
-    background-color: #ffffff;
-    overflow: hidden;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-bottom: 1px solid #eee;
-
-    /* 🔥 Elimina cualquier animación aplicada al contenedor */
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-}
-
-.faja-logo img {
-    width: 100%;
-    height: 100%;
-
-    object-fit: cover;
-    object-position: center;
-
-    /* 🔥 Elimina cualquier animación o transición */
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-
-    /* 🔥 Evita efectos raros de aparición */
-    opacity: 1 !important;
-}
-
-        .header-fino-ancho {
+        .faja-logo { 
+            height: 80px;
+            background-color: #ffffff;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #eee;
+        }
+        .faja-logo img { width: 100%; height: 100%; object-fit: cover; object-position: center; animation: none !important; transition: none !important; }
+        
+        .header-fino-ancho { 
             background-color: #ffffff;
             border-bottom: 4px solid #00cc6e !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             padding: 12px 0 !important;
         }
-
+        
         .header-fino-ancho h1 {
             color: #212529;
             font-weight: 800;
@@ -75,7 +49,7 @@
         }
 
         /* Cards */
-        .card {
+        .card { 
             border: none;
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -83,11 +57,11 @@
             background: white;
             border-top: 3px solid transparent;
         }
-
+        
         .card:hover {
             box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
         }
-
+        
         .card h6 {
             color: #333;
             font-weight: 700;
@@ -95,20 +69,19 @@
         }
 
         /* Botones */
-        .btn-success,
-        .btn-dark {
+        .btn-success, .btn-dark {
             border-radius: 10px;
             font-weight: 700;
             transition: all 0.3s ease;
             border: none;
         }
-
-        .btn-excel {
+        
+        .btn-excel { 
             background: linear-gradient(135deg, #1d6f42 0%, #0f5233 100%);
             box-shadow: 0 8px 16px rgba(29, 111, 66, 0.25);
         }
-
-        .btn-excel:hover {
+        
+        .btn-excel:hover { 
             background: linear-gradient(135deg, #0f5233 0%, #1d6f42 100%);
             transform: translateY(-2px);
             box-shadow: 0 12px 24px rgba(29, 111, 66, 0.35);
@@ -128,39 +101,36 @@
         }
 
         /* Tabla */
-        .contenedor-tabla-fija {
+        .contenedor-tabla-fija { 
             min-height: 400px;
             background: white;
             border-radius: 14px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         }
 
-        .table-responsive {
-            border-radius: 14px;
-            overflow: hidden;
-        }
-
+        .table-responsive { border-radius: 14px; overflow: hidden; }
+        
         .table {
             margin-bottom: 0;
         }
-
+        
         .table thead {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
-
+        
         .table thead th {
             border: none;
             font-weight: 700;
             padding: 12px 10px;
             font-size: 0.8rem;
         }
-
+        
         .table tbody tr {
             transition: all 0.2s;
             border-bottom: 1px solid #f0f0f0;
         }
-
+        
         .table tbody tr:hover {
             background-color: #f8f9fc;
         }
@@ -231,272 +201,152 @@
 </head>
 
 <body>
+    <!-- Header con Logo -->
+    <div class="faja-logo">
+        <img src="images/LOGO-FACTURA.png" alt="Logo HRS">
+    </div>
 
-  <!-- ========================= -->
-  <!-- HEADER LOGO -->
-  <!-- ========================= -->
-    <div class="container-fluid p-0">
-        <div class="faja-logo">
-            <img src="images/LOGO-FACTURA-1.png" alt="HRS Logo Banner">
+    <!-- Header -->
+    <nav class="navbar navbar-light header-fino-ancho">
+        <div class="container-fluid">
+            <h1 class="navbar-brand mb-0">📋 HISTORIAL DE FACTURAS</h1>
+        </div>
+    </nav>
+
+    <!-- Contenedor Principal -->
+    <div class="container container-main">
+        
+        <!-- Filtros -->
+        <div class="filtros-section">
+            <h6 class="fw-bold mb-3">🔍 FILTROS</h6>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Cliente</label>
+                    <input type="text" class="form-control form-control-sm" id="filtroCliente" placeholder="Buscar cliente..." onkeyup="aplicarFiltros()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold">Tipo</label>
+                    <select class="form-select form-select-sm" id="filtroTipo" onchange="aplicarFiltros()">
+                        <option value="">Todos</option>
+                        <option value="Factura">Factura</option>
+                        <option value="Recibo">Recibo</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Mes</label>
+                    <input type="month" class="form-control form-control-sm" id="filtroMes" onchange="aplicarFiltros()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold"></label>
+                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="limpiarFiltros()">Limpiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Facturas -->
+        <div class="card p-3 shadow-sm">
+            <h6 class="fw-bold mb-3 border-bottom pb-2">📄 Listado de Facturas y Recibos</h6>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" style="font-size: 0.85rem;">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>N°</th>
+                            <th>Tipo</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Mes</th>
+                            <th>Total</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facturasHistorialBody">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <small>No hay facturas registradas</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Botones inferiores -->
+            <div class="row mt-4 g-2">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between">
+                        <a href="/" class="btn btn-volver btn-sm px-4 shadow-sm py-2 fw-bold text-white" title="Volver a la página principal">← VOLVER</a>
+                        <div>
+                            <button class="btn btn-excel btn-sm px-4 me-2 shadow-sm py-2" onclick="exportarHistorialExcel()">📊 EXCEL</button>
+                            <button class="btn btn-danger btn-sm px-4 shadow-sm py-2" onclick="abrirConfirmacionBorrar()">🗑️ LIMPIAR TODO</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="row mt-4 g-3">
+            <div class="col-md-3">
+                <div class="card p-3 text-center">
+                    <h6 class="text-muted small mb-2">TOTAL FACTURAS</h6>
+                    <h3 class="fw-bold text-primary" id="statsFacturas">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 text-center">
+                    <h6 class="text-muted small mb-2">TOTAL RECIBOS</h6>
+                    <h3 class="fw-bold text-success" id="statsRecibos">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 text-center">
+                    <h6 class="text-muted small mb-2">MONTO TOTAL</h6>
+                    <h3 class="fw-bold" id="statsMontoTotal">$ 0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 text-center">
+                    <h6 class="text-muted small mb-2">REGISTROS</h6>
+                    <h3 class="fw-bold text-info" id="statsTotal">0</h3>
+                </div>
+            </div>
         </div>
     </div>
 
-
-  <!-- ========================= -->
-  <!-- HEADER TITULO -->
-  <!-- ========================= -->
-  <nav class="navbar navbar-light bg-dark py-3 shadow-sm">
-    <div class="container">
-      <h1 class="navbar-brand fw-bold text-white mb-0">
-        📋 HISTORIAL DE FACTURAS
-      </h1>
-    </div>
-  </nav>
-
-
-  <!-- ========================= -->
-  <!-- CONTENEDOR PRINCIPAL -->
-  <!-- ========================= -->
-  <div class="container container-main my-4">
-
-
-    <!-- ========================= -->
-    <!-- FILTROS -->
-    <!-- ========================= -->
-    <div class="filtros-section p-4 rounded-4 shadow-sm bg-white border mb-4">
-
-      <div class="d-flex align-items-center mb-3">
-        <h6 class="fw-bold mb-0">🔍 FILTROS</h6>
-      </div>
-
-      <div class="row g-3 align-items-end">
-
-        <!-- Cliente -->
-        <div class="col-md-4">
-          <label class="form-label small fw-bold">Cliente</label>
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            id="filtroCliente"
-            placeholder="Buscar cliente..."
-            onkeyup="aplicarFiltros()"
-          >
-        </div>
-
-        <!-- Tipo -->
-        <div class="col-md-2">
-          <label class="form-label small fw-bold">Tipo</label>
-          <select
-            class="form-select form-select-sm"
-            id="filtroTipo"
-            onchange="aplicarFiltros()"
-          >
-            <option value="">Todos</option>
-            <option value="Factura">Factura</option>
-            <option value="Recibo">Recibo</option>
-          </select>
-        </div>
-
-        <!-- Mes -->
-        <div class="col-md-3">
-          <label class="form-label small fw-bold">Mes</label>
-          <input
-            type="month"
-            class="form-control form-control-sm"
-            id="filtroMes"
-            onchange="aplicarFiltros()"
-          >
-        </div>
-
-        <!-- Botón Limpiar -->
-        <div class="col-md-3">
-          <button
-            class="btn btn-outline-dark btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
-            onclick="limpiarFiltros()"
-          >
-            🧹 Limpiar filtros
-          </button>
-        </div>
-
-      </div>
+    <!-- Faja Inferior -->
+    <div class="container-fluid p-0 faja-abajo">
+        <img src="images/FAJA-ABAJO-HRS.png" class="w-100" style="height: 50px; object-fit: cover;">
     </div>
 
-
-    <!-- ========================= -->
-    <!-- TABLA FACTURAS -->
-    <!-- ========================= -->
-    <div class="card p-4 rounded-4 shadow-sm border-0 mb-4">
-
-      <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-        <h6 class="fw-bold mb-0">📄 Listado de Facturas y Recibos</h6>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
-
-          <thead class="table-dark">
-            <tr>
-              <th>N°</th>
-              <th>Tipo</th>
-              <th>Cliente</th>
-              <th>Fecha</th>
-              <th>Mes</th>
-              <th>Total</th>
-              <th class="text-center">Acciones</th>
-            </tr>
-          </thead>
-
-          <tbody id="facturasHistorialBody">
-            <tr>
-              <td colspan="7" class="text-center text-muted py-4">
-                <small>No hay facturas registradas</small>
-              </td>
-            </tr>
-          </tbody>
-
-        </table>
-      </div>
-
-
-      <!-- ========================= -->
-      <!-- BOTONES INFERIORES -->
-      <!-- ========================= -->
-      <div class="row mt-4 g-3 align-items-end">
-
-        <!-- Volver -->
-        <div class="col-md-4">
-          <a
-            href="/"
-            class="btn btn-dark btn-sm w-100 py-2 fw-bold shadow-sm"
-          >
-            ← VOLVER
-          </a>
+    <!-- Modal Confirmación Borrar -->
+    <div class="modal fade" id="confirmarBorrarModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4 text-center shadow border-0" style="border-radius: 15px;">
+                <div class="fs-1 mb-2">❓</div>
+                <h4 class="fw-bold">¿Borrar todo el historial?</h4>
+                <p class="text-muted small">Esta acción no se puede deshacer</p>
+                <div class="mt-3">
+                    <button class="btn btn-light px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-danger px-4" onclick="confirmarBorrarHistorial()">Sí, borrar todo</button>
+                </div>
+            </div>
         </div>
-
-        <!-- Acciones -->
-        <div class="col-md-8">
-          <div class="d-flex justify-content-md-end gap-2 flex-wrap">
-
-            <button
-              class="btn btn-success btn-sm px-4 py-2 shadow-sm"
-              onclick="exportarHistorialExcel()"
-            >
-              📊 EXCEL
-            </button>
-
-            <button
-              class="btn btn-danger btn-sm px-4 py-2 shadow-sm"
-              onclick="abrirConfirmacionBorrar()"
-            >
-              🗑️ LIMPIAR TODO
-            </button>
-
-          </div>
-        </div>
-
-      </div>
-
     </div>
 
-
-    <!-- ========================= -->
-    <!-- ESTADÍSTICAS -->
-    <!-- ========================= -->
-    <div class="row g-3 mb-4">
-
-      <div class="col-md-3">
-        <div class="card p-4 rounded-4 shadow-sm border-0 text-center h-100">
-          <h6 class="text-muted small mb-2">TOTAL FACTURAS</h6>
-          <h2 class="fw-bold text-primary mb-0" id="statsFacturas">0</h2>
+    <!-- Modal Alerta -->
+    <div class="modal fade" id="alertaModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div id="modalContentAlerta" class="modal-content text-center p-4 border-0 shadow" style="border-radius: 15px;">
+                <div id="modalIcono" class="fs-2 mb-2"></div>
+                <h5 id="modalTitulo" class="fw-bold"></h5>
+                <p id="modalMensaje" class="text-muted small mb-0"></p>
+            </div>
         </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card p-4 rounded-4 shadow-sm border-0 text-center h-100">
-          <h6 class="text-muted small mb-2">TOTAL RECIBOS</h6>
-          <h2 class="fw-bold text-success mb-0" id="statsRecibos">0</h2>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card p-4 rounded-4 shadow-sm border-0 text-center h-100">
-          <h6 class="text-muted small mb-2">MONTO TOTAL</h6>
-          <h2 class="fw-bold mb-0" id="statsMontoTotal">$ 0</h2>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card p-4 rounded-4 shadow-sm border-0 text-center h-100">
-          <h6 class="text-muted small mb-2">REGISTROS</h6>
-          <h2 class="fw-bold text-info mb-0" id="statsTotal">0</h2>
-        </div>
-      </div>
-
     </div>
 
-  </div>
-
-
-  <!-- ========================= -->
-  <!-- FAJA INFERIOR -->
-  <!-- ========================= -->
-  <div class="container-fluid p-0 mt-4">
-    <img
-      src="images/FAJA-ABAJO-HRS.png"
-      class="w-100"
-      style="height: 55px; object-fit: cover;"
-    >
-  </div>
-
-
-  <!-- ========================= -->
-  <!-- MODAL CONFIRMACIÓN -->
-  <!-- ========================= -->
-  <div class="modal fade" id="confirmarBorrarModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content p-4 text-center shadow border-0 rounded-4">
-
-        <div class="fs-1 mb-2">❓</div>
-        <h4 class="fw-bold">¿Borrar todo el historial?</h4>
-        <p class="text-muted small">Esta acción no se puede deshacer</p>
-
-        <div class="d-flex justify-content-center gap-2 mt-3">
-          <button class="btn btn-light px-4" data-bs-dismiss="modal">
-            Cancelar
-          </button>
-          <button class="btn btn-danger px-4" onclick="confirmarBorrarHistorial()">
-            Sí, borrar todo
-          </button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ========================= -->
-  <!-- MODAL ALERTA -->
-  <!-- ========================= -->
-  <div class="modal fade" id="alertaModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content text-center p-4 border-0 shadow rounded-4">
-
-        <div id="modalIcono" class="fs-2 mb-2"></div>
-        <h5 id="modalTitulo" class="fw-bold"></h5>
-        <p id="modalMensaje" class="text-muted small mb-0"></p>
-
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ========================= -->
-  <!-- SCRIPTS -->
-  <!-- ========================= -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="historial.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="historial.js"></script>
 </body>
+
 </html>
