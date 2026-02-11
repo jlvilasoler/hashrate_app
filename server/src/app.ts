@@ -35,6 +35,14 @@ export function createApp() {
 
   app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
 
+  app.get("/", (_req, res) => {
+    res.json({
+      message: "API HRS Facturación",
+      health: "/api/health",
+      docs: "Rutas: GET/POST /api/clients, GET/POST/DELETE /api/invoices"
+    });
+  });
+
   app.use("/api", healthRouter);
   app.use("/api", clientsRouter);
   app.use("/api", invoicesRouter);
