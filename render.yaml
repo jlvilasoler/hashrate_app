@@ -1,0 +1,17 @@
+# Render Blueprint: backend (API) para hashrate_app
+# Al conectar el repo en Render, elegir "Apply" con este Blueprint.
+# Luego en Dashboard → Environment: agregar CORS_ORIGIN = https://tu-app.vercel.app
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: hashrate-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        sync: false

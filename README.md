@@ -64,15 +64,32 @@ El proyecto est? listo para desplegar solo el **frontend** (client) en Vercel:
 3. **Deploy**
    - Hac? clic en ?Deploy?. Vercel va a instalar dependencias, construir el client y publicar el sitio.
 
-4. **Para que la app funcione de punta a punta**
-   - En Vercel solo se despliega el **frontend**. El backend (Express) no corre en Vercel.
-   - Para que clientes, facturas y reportes funcionen en producci?n:
-     1. Desplegá el **server** en otro servicio (Railway, Render, Koyeb, etc.) con Node, con `PORT`, `SQLITE_PATH` (opcional) y `CORS_ORIGIN` configurados.
-     2. En **Vercel** ? tu proyecto ? **Settings** ? **Environment Variables** agreg?:
-        - **Name:** `VITE_API_URL`
-        - **Value:** la URL base del backend, ej. `https://tu-api.railway.app` (sin barra final).
-     3. Volv? a desplegar (Redeploy) para que el build del client use esa URL.
-   - Si no configur?s `VITE_API_URL`, el sitio en Vercel carga pero las llamadas a la API fallan (no hay backend en ese dominio).
+4. **Para que la app funcione de punta a punta** despleg? el backend en Railway (ver abajo) y configur? `VITE_API_URL` en Vercel con la URL del API.
+
+## Desplegar el backend en Railway
+
+Con el repo ya en GitHub:
+
+1. Entr? a [railway.app](https://railway.app) e inici? sesi?n.
+2. **New Project** ? **Deploy from GitHub repo** ? eleg? **hashrate_app**.
+3. En el servicio creado, entr? a **Settings**:
+   - **Root Directory:** `server` (as? Railway solo construye y corre el backend).
+   - **Build Command:** (dej? vac?o; por defecto hace `npm install` y usa el `build` del `package.json`).
+   - **Start Command:** (dej? vac?o; usa `npm start`).
+4. **Variables** (pesta?a Variables):
+   - `CORS_ORIGIN` = URL de tu front en Vercel, ej. `https://hashrateapp.vercel.app` (sin barra final).
+   - `PORT` lo asigna Railway; no hace falta definirlo.
+5. **Deploy**: Railway hace build y deploy. En **Settings** ? **Networking** ? **Generate Domain** obten? la URL p?blica (ej. `https://hashrate-app-production-xxxx.up.railway.app`).
+6. En **Vercel** ? tu proyecto ? **Settings** ? **Environment Variables**:
+   - **Name:** `VITE_API_URL`
+   - **Value:** la URL de Railway (ej. `https://hashrate-app-production-xxxx.up.railway.app`), sin barra final.
+7. En Vercel hac? **Redeploy** para que el front use la nueva API.
+
+**Nota:** En Railway el disco es ef?mero por defecto; `data.db` puede perderse en un redeploy. Para persistir datos pod?s agregar un **Volume** en Railway y configurar `SQLITE_PATH` apuntando a una ruta dentro del volume.
+
+## Desplegar el backend en Render
+
+El repo incluye `render.yaml` (Blueprint). En [dashboard.render.com](https://dashboard.render.com): **New** ? **Web Service** ? repo **hashrate_app**. Si Render ofrece aplicar el Blueprint, aceptá (queda Root Directory `server`, Build `npm install && npm run build`, Start `npm start`). En **Environment** agregá **CORS_ORIGIN** = tu URL de Vercel. Copiá la URL del servicio y ponela en Vercel como **VITE_API_URL**, luego Redeploy del front.
 
 ## Notas
 

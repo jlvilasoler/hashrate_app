@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "engines": { "node": ">=20" },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.6",
