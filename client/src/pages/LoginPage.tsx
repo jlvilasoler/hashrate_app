@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getApiBaseUrlForDisplay, setApiBaseUrl } from "../lib/api";
 import "../styles/facturacion.css";
 
 export function LoginPage() {
@@ -10,6 +11,9 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showApiConfig, setShowApiConfig] = useState(false);
+  const [apiUrl, setApiUrl] = useState(getApiBaseUrlForDisplay());
+  const [apiUrlSaved, setApiUrlSaved] = useState(false);
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? "/";
 
@@ -68,6 +72,42 @@ export function LoginPage() {
               <button type="submit" className="btn btn-primary w-100" disabled={submitting}>
                 {submitting ? "Entrando..." : "Entrar"}
               </button>
+              <div className="mt-3 text-center">
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm text-muted p-0"
+                  onClick={() => {
+                    setShowApiConfig((v) => !v);
+                    if (!showApiConfig) setApiUrl(getApiBaseUrlForDisplay());
+                  }}
+                >
+                  {showApiConfig ? "Ocultar" : "No conecta? Configurar URL del backend"}
+                </button>
+              </div>
+              {showApiConfig && (
+                <div className="mt-3 p-3 border rounded bg-light">
+                  <label className="form-label small fw-bold">URL del backend (ej. https://tu-servicio.onrender.com)</label>
+                  <input
+                    type="url"
+                    className="form-control form-control-sm"
+                    placeholder="https://hashrate-api.onrender.com"
+                    value={apiUrl.startsWith("(mismo") ? "" : apiUrl}
+                    onChange={(e) => { setApiUrl(e.target.value); setApiUrlSaved(false); }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm mt-2"
+                    onClick={() => {
+                      setApiBaseUrl(apiUrl);
+                      setApiUrlSaved(true);
+                      setApiUrl(getApiBaseUrlForDisplay());
+                    }}
+                  >
+                    Guardar URL
+                  </button>
+                  {apiUrlSaved && <span className="ms-2 text-success small">Guardado. Intentá iniciar sesión de nuevo.</span>}
+                </div>
+              )}
             </form>
           </div>
         </div>

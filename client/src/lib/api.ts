@@ -1,18 +1,34 @@
 import { getStoredToken, clearStoredAuth } from "./auth.js";
 import type { AuthUser } from "./auth.js";
 
+const STORAGE_KEY = "hrs_api_url";
 const RAW = (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? "";
 const DEFAULT_RENDER_API = "https://hashrate-api.onrender.com";
-const API_BASE = (() => {
-  const s = typeof RAW === "string" ? RAW.replace(/\/+$/, "").trim() : "";
+
+function getApiBase(): string {
+  if (typeof window === "undefined") return "";
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  const s = typeof stored === "string" ? stored.replace(/\/+$/, "").trim() : "";
   if (s) return s;
-  if (typeof window !== "undefined") {
-    const h = window.location?.hostname ?? "";
-    if (h === "localhost" || h === "127.0.0.1") return "";
-    if (h.endsWith(".vercel.app")) return DEFAULT_RENDER_API;
-  }
+  const build = typeof RAW === "string" ? RAW.replace(/\/+$/, "").trim() : "";
+  if (build) return build;
+  const h = window.location?.hostname ?? "";
+  if (h === "localhost" || h === "127.0.0.1") return "";
+  if (h.endsWith(".vercel.app")) return DEFAULT_RENDER_API;
   return "";
-})();
+}
+
+export function setApiBaseUrl(url: string): void {
+  const v = url.replace(/\/+$/, "").trim();
+  if (typeof window !== "undefined") {
+    if (v) window.localStorage.setItem(STORAGE_KEY, v);
+    else window.localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+export function getApiBaseUrlForDisplay(): string {
+  return getApiBase() || "(mismo origen o no configurado)";
+}
 
 function isLocalHost(): boolean {
   if (typeof window === "undefined") return false;
@@ -21,7 +37,8 @@ function isLocalHost(): boolean {
 }
 
 function getApiBaseHint(): string {
-  if (API_BASE) return API_BASE;
+  const base = getApiBase();
+  if (base) return base;
   if (typeof window !== "undefined" && window.location?.origin) return window.location.origin + " (mismo origen)";
   return "(no configurado)";
 }
@@ -57,7 +74,8 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getStoredToken();
   const headers: Record<string, string> = { "Content-Type": "application/json", ...(options?.headers as Record<string, string>) };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const url = `${API_BASE}${path}`;
+  const base = getApiBase();
+  const url = `${base}${path}`;
   let lastError: Error | null = null;
   for (let i = 0; i < RETRY_DELAYS_MS.length; i++) {
     if (i > 0) await delay(RETRY_DELAYS_MS[i]!);
@@ -95,7 +113,7 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const msg = toThrow.message || "";
   if (msg === "Failed to fetch" || msg === "Load failed" || msg.includes("NetworkError") || msg === "The operation was aborted.") {
     throw new Error(
-      `No se pudo conectar con ${API_BASE || "el servidor"}. Verificá: 1) En Render el servicio debe estar Live. 2) Si no se llama "hashrate-api", en Vercel agregá VITE_API_URL con la URL de tu servicio y redeployá.`
+      `No se pudo conectar con ${getApiBase() || "el servidor"}. Configurá abajo la URL de tu backend (copiala desde Render) y volvé a intentar.`
     );
   }
   throw toThrow;
