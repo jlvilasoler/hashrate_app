@@ -40,32 +40,58 @@ function get502Message(): string {
     : "El servidor está arrancando (Render tarda ~1 min en despertar). Volvé a intentar en un momento.";
 }
 
+const RETRY_DELAYS_MS = [0, 4000, 10000];
+const FETCH_TIMEOUT_MS = 55000;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function fetchWithTimeout(url: string, opts: RequestInit, timeoutMs: number): Promise<Response> {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), timeoutMs);
+  return fetch(url, { ...opts, signal: ac.signal }).finally(() => clearTimeout(t));
+}
+
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getStoredToken();
   const headers: Record<string, string> = { "Content-Type": "application/json", ...(options?.headers as Record<string, string>) };
   if (token) headers.Authorization = `Bearer ${token}`;
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  } catch (e) {
-    throw new Error(getNoApiMessage());
-  }
-  const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
-  if (res.status === 401) {
-    if (token) {
-      clearStoredAuth();
-      const cb = typeof window !== "undefined" ? (window as unknown as { __on401?: () => void }).__on401 : undefined;
-      if (typeof cb === "function") cb();
+  const url = `${API_BASE}${path}`;
+  let lastError: Error | null = null;
+  for (let i = 0; i < RETRY_DELAYS_MS.length; i++) {
+    if (i > 0) await delay(RETRY_DELAYS_MS[i]!);
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(url, { ...options, headers }, FETCH_TIMEOUT_MS);
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+      continue;
     }
-    throw new Error((data as { error?: { message?: string } })?.error?.message ?? "Sesión expirada. Volvé a iniciar sesión.");
+    const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      if (token) {
+        clearStoredAuth();
+        const cb = typeof window !== "undefined" ? (window as unknown as { __on401?: () => void }).__on401 : undefined;
+        if (typeof cb === "function") cb();
+      }
+      throw new Error((data as { error?: { message?: string } })?.error?.message ?? "Sesión expirada. Volvé a iniciar sesión.");
+    }
+    if (!res.ok) {
+      if (res.status === 502 || res.status === 503) {
+        lastError = new Error(get502Message());
+        continue;
+      }
+      if (res.status === 404) {
+        lastError = new Error(getNoApiMessage());
+        continue;
+      }
+      const msg = (data as { error?: { message?: string } })?.error?.message ?? res.statusText;
+      throw new Error(msg);
+    }
+    return data as T;
   }
-  if (!res.ok) {
-    if (res.status === 502) throw new Error(get502Message());
-    if (res.status === 404) throw new Error(getNoApiMessage());
-    const msg = (data as { error?: { message?: string } })?.error?.message ?? res.statusText;
-    throw new Error(msg);
-  }
-  return data as T;
+  throw lastError ?? new Error(getNoApiMessage());
 }
 
 export type LoginResponse = { token: string; user: AuthUser };
