@@ -251,8 +251,8 @@ export function generateFacturaPdf(data: FacturaPdfData, images?: FacturaPdfImag
       const serviceLabel = it.serviceKey === "A" ? "L7" : it.serviceKey === "B" ? "L9" : "S21";
       const descDescuento = `Descuento HASHRATE ${serviceLabel}`;
       doc.text(descDescuento, tableLeft + 3, y + 5.5);
-      doc.text("- " + formatUSD(discountAmount), centerPrecio, y + 5.5, { align: "center" });
-      doc.text("1", centerCant, y + 5.5, { align: "center" });
+      doc.text("- " + formatUSD(it.discount), centerPrecio, y + 5.5, { align: "center" });
+      doc.text(String(it.quantity), centerCant, y + 5.5, { align: "center" });
       doc.text("- " + formatUSD(discountAmount), centerTotal, y + 5.5, { align: "center" });
       if (y + ROW_H < tableTop + tableTotalH) {
         doc.line(tableLeft, y + ROW_H, tableLeft + TABLE_W, y + ROW_H);
