@@ -30,13 +30,6 @@ function ymToMonthYear(ym: string): string {
   return `${m}-${y}`;
 }
 
-function monthToRange(ym: string): string {
-  if (!/^\d{4}-\d{2}$/.test(ym)) return ym;
-  const [y, m] = ym.split("-").map(Number);
-  const lastDay = new Date(y, m, 0).getDate();
-  return `01/${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}/${String(m).padStart(2, "0")}`;
-}
-
 function formatUSD(n: number): string {
   return `${n.toFixed(2).replace(".", ",")} USD`;
 }

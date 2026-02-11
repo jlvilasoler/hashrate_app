@@ -67,8 +67,15 @@ El proyecto está listo para desplegar solo el **frontend** (client) en Vercel:
 3. **Deploy**
    - Hacé clic en ?Deploy?. Vercel va a instalar dependencias, construir el client y publicar el sitio.
 
-4. **Nota**
-   - Se despliega solo la app React (client). Si en producción la app usa una API, tenés que tener el backend desplegado en otro servicio (Railway, Render, etc.) y configurar la URL de la API en el client (variables de entorno si usás `Vite` env).
+4. **Para que la app funcione de punta a punta**
+   - En Vercel solo se despliega el **frontend**. El backend (Express) no corre en Vercel.
+   - Para que clientes, facturas y reportes funcionen en producción:
+     1. Desplegá el **server** en otro servicio (Railway, Render, Koyeb, etc.) con Node, con `PORT`, `MONGODB_URI` (o `SQLITE_PATH`) y `CORS_ORIGIN` configurados.
+     2. En **Vercel** ? tu proyecto ? **Settings** ? **Environment Variables** agregá:
+        - **Name:** `VITE_API_URL`
+        - **Value:** la URL base del backend, ej. `https://tu-api.railway.app` (sin barra final).
+     3. Volvé a desplegar (Redeploy) para que el build del client use esa URL.
+   - Si no configurás `VITE_API_URL`, el sitio en Vercel carga pero las llamadas a la API fallan (no hay backend en ese dominio).
 
 ## Notas
 
