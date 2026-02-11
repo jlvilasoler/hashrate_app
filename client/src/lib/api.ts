@@ -91,7 +91,14 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     }
     return data as T;
   }
-  throw lastError ?? new Error(getNoApiMessage());
+  const toThrow = lastError ?? new Error(getNoApiMessage());
+  const msg = toThrow.message || "";
+  if (msg === "Failed to fetch" || msg === "Load failed" || msg.includes("NetworkError") || msg === "The operation was aborted.") {
+    throw new Error(
+      `No se pudo conectar con ${API_BASE || "el servidor"}. Verificá: 1) En Render el servicio debe estar Live. 2) Si no se llama "hashrate-api", en Vercel agregá VITE_API_URL con la URL de tu servicio y redeployá.`
+    );
+  }
+  throw toThrow;
 }
 
 export type LoginResponse = { token: string; user: AuthUser };
