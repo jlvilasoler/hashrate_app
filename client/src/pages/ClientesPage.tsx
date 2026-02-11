@@ -31,7 +31,8 @@ export function ClientesPage() {
   }
 
   useEffect(() => {
-    loadClients();
+    const t = setTimeout(loadClients, 0);
+    return () => clearTimeout(t);
   }, []);
 
   function handleSubmit(e: React.FormEvent) {
