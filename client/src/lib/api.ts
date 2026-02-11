@@ -1,12 +1,21 @@
 const API_BASE = (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? "";
 
+const NO_API_MSG =
+  "No se pudo conectar con el servidor. En Vercel solo está el frontend; para guardar datos desplegá el backend (Railway, Render, etc.) y configurá VITE_API_URL en Vercel.";
+
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options?.headers }
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...options?.headers }
+    });
+  } catch (e) {
+    throw new Error(NO_API_MSG);
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 404 || res.status === 502) throw new Error(NO_API_MSG);
     const msg = (data as { error?: { message?: string } })?.error?.message ?? res.statusText;
     throw new Error(msg);
   }
