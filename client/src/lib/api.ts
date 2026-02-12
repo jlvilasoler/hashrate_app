@@ -1,10 +1,15 @@
 import { getStoredToken, clearStoredAuth } from "./auth.js";
 import type { AuthUser } from "./auth.js";
 
-// Plan A: localStorage (puede setearse de forma oculta con /login?api=URL), luego VITE_API_URL, luego default Render.
+// Plan A: localStorage, VITE_API_URL, default. Si falla, Plan B: probar URLs de fallback y guardar la que responda (Chrome/Opera sin localStorage).
 const STORAGE_KEY = "hrs_api_url";
 const RAW = (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? "";
 const DEFAULT_RENDER_API = "https://hashrate-api.onrender.com";
+const FALLBACK_API_URLS = [
+  "https://hashrate-api.onrender.com",
+  "https://hashrate-facturacion-hrs.onrender.com",
+  "https://hashrate-app.onrender.com",
+];
 
 function getApiBase(): string {
   if (typeof window === "undefined") return "";
@@ -103,12 +108,36 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     }
     return data as T;
   }
-  const toThrow = lastError ?? new Error(getNoApiMessage());
-  const msg = toThrow.message || "";
-  if (msg === "Failed to fetch" || msg === "Load failed" || msg.includes("NetworkError") || msg === "The operation was aborted.") {
-    throw new Error(getNoApiMessage());
+  const msg = lastError?.message || "";
+  const isConnectionError = msg === "Failed to fetch" || msg === "Load failed" || msg.includes("NetworkError") || msg === "The operation was aborted." || msg === get502Message() || msg === getNoApiMessage();
+  if (isConnectionError && typeof window !== "undefined" && window.location?.hostname?.endsWith(".vercel.app")) {
+    const currentBase = getApiBase();
+    for (const fallback of FALLBACK_API_URLS) {
+      if (fallback === currentBase) continue;
+      try {
+        const res = await fetchWithTimeout(`${fallback}${path}`, { ...options, headers }, FETCH_TIMEOUT_MS);
+        const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
+        setApiBaseUrl(fallback);
+        if (res.status === 401) {
+          if (token) {
+            clearStoredAuth();
+            const cb = (window as unknown as { __on401?: () => void }).__on401;
+            if (typeof cb === "function") cb();
+          }
+          throw new Error((data as { error?: { message?: string } })?.error?.message ?? "Sesión expirada. Volvé a iniciar sesión.");
+        }
+        if (!res.ok) {
+          const errMsg = (data as { error?: { message?: string } })?.error?.message ?? res.statusText;
+          throw new Error(errMsg);
+        }
+        return data as T;
+      } catch (e) {
+        /* siguiente fallback */
+      }
+    }
   }
-  throw toThrow;
+  if (isConnectionError) throw new Error(getNoApiMessage());
+  throw lastError ?? new Error(getNoApiMessage());
 }
 
 export type LoginResponse = { token: string; user: AuthUser };
