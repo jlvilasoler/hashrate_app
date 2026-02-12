@@ -188,6 +188,27 @@ export function deleteUser(id: number): Promise<void> {
   return api<void>(`/api/users/${id}`, { method: "DELETE" });
 }
 
+export type ActivityItem = {
+  id: number;
+  user_id: number;
+  user_email: string;
+  event: "login" | "logout";
+  created_at: string;
+  ip_address?: string;
+  user_agent?: string;
+  duration_seconds?: number;
+};
+export type UsersActivityResponse = { activity: ActivityItem[] };
+
+export function getUsersActivity(limit?: number): Promise<UsersActivityResponse> {
+  const q = limit != null ? `?limit=${limit}` : "";
+  return api<UsersActivityResponse>(`/api/users/activity${q}`);
+}
+
+export function logoutApi(): Promise<void> {
+  return api<void>("/api/auth/logout", { method: "POST" });
+}
+
 type ClientFields = { id?: number | string; code: string; name: string; name2?: string; phone?: string; phone2?: string; email?: string; email2?: string; address?: string; address2?: string; city?: string; city2?: string };
 export type ClientsResponse = { clients: Array<ClientFields> };
 export type ClientResponse = { client: ClientFields };

@@ -80,6 +80,13 @@ authRouter.post("/auth/login", (req, res) => {
   try {
     const user: AuthUser = { id: row.id, username: row.username, email: row.email ?? row.username, role: row.role as AuthUser["role"] };
     const token = jwt.sign({ sub: row.username, userId: row.id }, JWT_SECRET, { expiresIn: "7d" });
+    const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket?.remoteAddress || "";
+    const userAgent = (req.headers["user-agent"] as string) || "";
+    try {
+      db.prepare("INSERT INTO user_activity (user_id, event, ip_address, user_agent) VALUES (?, 'login', ?, ?)").run(row.id, ip, userAgent);
+    } catch (e) {
+      console.error("user_activity login insert:", e);
+    }
     return res.json({ token, user });
   } catch (e) {
     console.error("login sign error:", e);
@@ -89,6 +96,31 @@ authRouter.post("/auth/login", (req, res) => {
 
 authRouter.get("/auth/me", requireAuth, (req, res) => {
   res.json({ user: req.user });
+});
+
+/** Cerrar sesión (registra evento de salida y tiempo conectado) */
+authRouter.post("/auth/logout", requireAuth, (req, res) => {
+  const userId = req.user!.id;
+  const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket?.remoteAddress || "";
+  const userAgent = (req.headers["user-agent"] as string) || "";
+  try {
+    const now = new Date();
+    let durationSec: number | null = null;
+    const lastLogin = db.prepare(
+      "SELECT id, created_at FROM user_activity WHERE user_id = ? AND event = 'login' AND duration_seconds IS NULL ORDER BY created_at DESC LIMIT 1"
+    ).get(userId) as { id: number; created_at: string } | undefined;
+    if (lastLogin) {
+      const loginAt = new Date(lastLogin.created_at).getTime();
+      durationSec = Math.round((now.getTime() - loginAt) / 1000);
+      db.prepare("UPDATE user_activity SET duration_seconds = ? WHERE id = ?").run(durationSec, lastLogin.id);
+    }
+    db.prepare(
+      "INSERT INTO user_activity (user_id, event, ip_address, user_agent, duration_seconds) VALUES (?, 'logout', ?, ?, ?)"
+    ).run(userId, ip, userAgent, durationSec);
+  } catch (e) {
+    console.error("user_activity logout:", e);
+  }
+  res.status(204).send();
 });
 
 export { authRouter, ensureDefaultUser };

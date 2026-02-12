@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getStoredToken, setStoredAuth, clearStoredAuth } from "../lib/auth";
 import type { AuthUser } from "../lib/auth";
-import { getMe, login as apiLogin } from "../lib/api";
+import { getMe, login as apiLogin, logoutApi } from "../lib/api";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    logoutApi().catch(() => {});
     clearStoredAuth();
     setUser(null);
   }, []);

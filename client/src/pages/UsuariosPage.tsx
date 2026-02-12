@@ -3,7 +3,9 @@ import {
   createUser,
   deleteUser,
   getUsers,
+  getUsersActivity,
   updateUser,
+  type ActivityItem,
   type UserListItem
 } from "../lib/api";
 import type { UserRole } from "../lib/auth";
@@ -21,13 +23,23 @@ const ROLES: { value: UserRole; label: string }[] = [
 export function UsuariosPage() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserListItem[]>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState<"new" | UserListItem | null>(null);
   const [formEmail, setFormEmail] = useState("");
   const [formPassword, setFormPassword] = useState("");
   const [formRole, setFormRole] = useState<UserRole>("operador");
   const [saving, setSaving] = useState(false);
+
+  function loadActivity() {
+    setActivityLoading(true);
+    getUsersActivity(200)
+      .then((r) => setActivity(r.activity))
+      .catch(() => setActivity([]))
+      .finally(() => setActivityLoading(false));
+  }
 
   function loadUsers() {
     setLoading(true);
@@ -41,6 +53,10 @@ export function UsuariosPage() {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  useEffect(() => {
+    if (currentUser?.role === "admin") loadActivity();
+  }, [currentUser?.role]);
 
   function openNew() {
     setModal("new");
@@ -170,6 +186,53 @@ export function UsuariosPage() {
             )}
           </div>
         </div>
+
+        {isAdmin && (
+          <div className="fact-card mt-4">
+            <div className="fact-card-body">
+              <h3 className="h6 mb-3">Actividad de usuarios</h3>
+              <p className="text-muted small mb-3">Entradas y salidas al sistema, horarios y tiempo conectado.</p>
+              {activityLoading ? (
+                <p className="text-muted">Cargando actividad...</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-bordered table-sm">
+                    <thead>
+                      <tr>
+                        <th>Usuario</th>
+                        <th>Evento</th>
+                        <th>Fecha y hora</th>
+                        <th>Tiempo conectado</th>
+                        <th>Ubicación (IP)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activity.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-muted text-center">Sin registros aún</td>
+                        </tr>
+                      ) : (
+                        activity.map((a) => (
+                          <tr key={a.id}>
+                            <td>{a.user_email}</td>
+                            <td>{a.event === "login" ? "Entrada" : "Salida"}</td>
+                            <td>{new Date(a.created_at).toLocaleString("es-AR")}</td>
+                            <td>
+                              {a.duration_seconds != null
+                                ? `${Math.floor(a.duration_seconds / 3600)}h ${Math.floor((a.duration_seconds % 3600) / 60)}min`
+                                : "—"}
+                            </td>
+                            <td>{a.ip_address || "—"}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {modal && (

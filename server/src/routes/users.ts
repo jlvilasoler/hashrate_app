@@ -100,6 +100,42 @@ usersRouter.put("/users/:id", requireAuth, requireRole("admin"), (req, res) => {
   res.json({ user: { id: row.id, email: row.email ?? row.username, role: row.role, created_at: row.created_at } });
 });
 
+/** Listar actividad de usuarios (solo admin): entradas/salidas, horarios, tiempo conectado, IP */
+usersRouter.get("/users/activity", requireAuth, requireRole("admin"), (req, res) => {
+  const limit = Math.min(Math.max(1, Number(req.query.limit) || 100), 500);
+  const rows = db
+    .prepare(
+      `SELECT a.id, a.user_id, a.event, a.created_at, a.ip_address, a.user_agent, a.duration_seconds,
+              u.email, u.username
+       FROM user_activity a
+       JOIN users u ON u.id = a.user_id
+       ORDER BY a.created_at DESC
+       LIMIT ?`
+    )
+    .all(limit) as Array<{
+    id: number;
+    user_id: number;
+    event: string;
+    created_at: string;
+    ip_address: string | null;
+    user_agent: string | null;
+    duration_seconds: number | null;
+    email: string | null;
+    username: string;
+  }>;
+  const activity = rows.map((r) => ({
+    id: r.id,
+    user_id: r.user_id,
+    user_email: r.email ?? r.username,
+    event: r.event,
+    created_at: r.created_at,
+    ip_address: r.ip_address ?? undefined,
+    user_agent: r.user_agent ?? undefined,
+    duration_seconds: r.duration_seconds ?? undefined
+  }));
+  res.json({ activity });
+});
+
 /** Eliminar usuario (solo admin); no puede eliminarse a sí mismo */
 usersRouter.delete("/users/:id", requireAuth, requireRole("admin"), (req, res) => {
   const id = Number(req.params.id);

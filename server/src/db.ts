@@ -45,6 +45,19 @@ CREATE TABLE IF NOT EXISTS users (
   role TEXT NOT NULL CHECK (role IN ('admin', 'operador', 'lector')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS user_activity (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  event TEXT NOT NULL CHECK (event IN ('login', 'logout')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  ip_address TEXT,
+  user_agent TEXT,
+  duration_seconds REAL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_activity_user_created ON user_activity(user_id, created_at);
 `);
 
 ["phone", "email", "address", "city", "email2", "name2", "phone2", "address2", "city2"].forEach((col) => {
