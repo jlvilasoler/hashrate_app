@@ -18,8 +18,10 @@
   - **Root Directory:** `server`
   - **Build Command:** `npm install && npm run build`
   - **Start Command:** `npm start`
+  - **Disk:** el Blueprint incluye un disco persistente (`/data`, 1 GB) y `SQLITE_PATH=/data/data.db` para que **usuarios, clientes y toda la base de datos se conserven entre deploys**.
 - [ ] **Environment:**  
-  `CORS_ORIGIN` = URL de Vercel (ej. `https://hashrateapp.vercel.app`) **sin** barra final.
+  `CORS_ORIGIN` = URL de Vercel (ej. `https://hashrateapp.vercel.app`) **sin** barra final.  
+  Si no usás el Blueprint, agregar también `SQLITE_PATH=/data/data.db` y crear un **Disk** en Render (mount path `/data`) para no perder datos en cada deploy.
 - [ ] Anotar la URL del servicio (ej. `https://hashrate-api.onrender.com`).
 
 ## 4. Comprobar
@@ -34,6 +36,10 @@
 | Render   | CORS_ORIGIN     | https://hashrateapp.vercel.app           |
 
 Siempre **sin** barra final en las URLs.
+
+## Persistencia de datos en Render (ya configurado en el Blueprint)
+El `render.yaml` incluye un **disco persistente** (`/data`) y `SQLITE_PATH=/data/data.db`. Así la base SQLite (usuarios, clientes, facturas del API, actividad) **no se borra en cada deploy**.  
+**Si el servicio ya existía sin disco:** en Render → tu servicio → **Disks** → **Add Disk** (name: `data`, mount path: `/data`, 1 GB). En **Environment** agregar `SQLITE_PATH` = `/data/data.db`. Luego **Redeploy**. A partir de ese deploy, los datos se mantienen.
 
 ## Si no anda
 - **Front carga pero no guarda:** En Vercel tiene que existir `VITE_API_URL` y después hay que hacer **Redeploy** (el valor se usa en el build).

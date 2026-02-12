@@ -10,8 +10,14 @@ services:
     rootDir: server
     buildCommand: npm install && npm run build
     startCommand: npm start
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
+      - key: SQLITE_PATH
+        value: /data/data.db
       - key: CORS_ORIGIN
         sync: false
