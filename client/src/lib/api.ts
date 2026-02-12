@@ -176,11 +176,11 @@ export function getUsers(): Promise<UsersResponse> {
   return api<UsersResponse>("/api/users");
 }
 
-export function createUser(body: { email: string; password: string; role: "admin" | "operador" | "lector" }): Promise<UserResponse> {
+export function createUser(body: { email: string; password: string; role: "admin_a" | "admin_b" | "operador" | "lector" }): Promise<UserResponse> {
   return api<UserResponse>("/api/users", { method: "POST", body: JSON.stringify(body) });
 }
 
-export function updateUser(id: number, body: { email?: string; password?: string; role?: "admin" | "operador" | "lector" }): Promise<UserResponse> {
+export function updateUser(id: number, body: { email?: string; password?: string; role?: "admin_a" | "admin_b" | "operador" | "lector" }): Promise<UserResponse> {
   return api<UserResponse>(`/api/users/${id}`, { method: "PUT", body: JSON.stringify(body) });
 }
 

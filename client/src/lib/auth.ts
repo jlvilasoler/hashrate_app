@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "operador" | "lector";
+export type UserRole = "admin_a" | "admin_b" | "operador" | "lector";
 
 export type AuthUser = {
   id: number;
@@ -38,29 +38,35 @@ export function getStoredUser(): AuthUser | null {
   }
 }
 
-/** Admin: todo. Operador: facturación y clientes (sin eliminar). Lector: solo observar, sin operaciones ni eliminar. */
+/** AdministradorA/B y Operador: facturación y clientes. Lector: solo observar. */
 export function canEditFacturacion(role: UserRole): boolean {
-  return role === "admin" || role === "operador";
+  return role === "admin_a" || role === "admin_b" || role === "operador";
 }
 
 export function canEditClientes(role: UserRole): boolean {
-  return role === "admin" || role === "operador";
+  return role === "admin_a" || role === "admin_b" || role === "operador";
 }
 
 export function canDeleteHistorial(role: UserRole): boolean {
-  return role === "admin";
+  return role === "admin_a" || role === "admin_b";
 }
 
 export function canDeleteClientes(role: UserRole): boolean {
-  return role === "admin";
+  return role === "admin_a" || role === "admin_b";
 }
 
 export function canManageUsers(role: UserRole): boolean {
-  return role === "admin";
+  return role === "admin_a" || role === "admin_b";
 }
 
-/** Exportar datos (Excel, etc.): solo admin y operador; lector solo observa en pantalla */
+/** Solo AdministradorA puede eliminar cuentas con rol AdministradorA o AdministradorB. */
+export function canDeleteAdminUser(currentUserRole: UserRole, targetUserRole: string): boolean {
+  if (targetUserRole !== "admin_a" && targetUserRole !== "admin_b") return true;
+  return currentUserRole === "admin_a";
+}
+
+/** Exportar datos (Excel, etc.): admin y operador; lector solo observa en pantalla */
 export function canExport(role: UserRole): boolean {
-  return role === "admin" || role === "operador";
+  return role === "admin_a" || role === "admin_b" || role === "operador";
 }
 

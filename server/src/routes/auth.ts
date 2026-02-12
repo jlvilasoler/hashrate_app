@@ -11,9 +11,9 @@ const authRouter = Router();
 const JWT_SECRET = env.JWT_SECRET;
 const LoginSchema = z.object({ username: z.string().min(1).max(200), password: z.string().min(1) });
 
-const DEFAULT_USERS: Array<{ email: string; password: string; role: "admin" | "operador" | "lector" }> = [
-  { email: "jv@hashrate.space", password: "admin123", role: "admin" },
-  { email: "fb@hashrate.space", password: "admin123", role: "admin" },
+const DEFAULT_USERS: Array<{ email: string; password: string; role: "admin_a" | "admin_b" | "operador" | "lector" }> = [
+  { email: "jv@hashrate.space", password: "admin123", role: "admin_a" },
+  { email: "fb@hashrate.space", password: "admin123", role: "admin_b" },
 ];
 
 /** Asegurar que los usuarios por defecto existan (crear si no existen) */

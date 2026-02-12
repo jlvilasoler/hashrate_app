@@ -8,14 +8,15 @@ import {
   type ActivityItem,
   type UserListItem
 } from "../lib/api";
-import type { UserRole } from "../lib/auth";
+import { canDeleteAdminUser, type UserRole } from "../lib/auth";
 import { PageHeader } from "../components/PageHeader";
 import { showToast } from "../components/ToastNotification";
 import { useAuth } from "../contexts/AuthContext";
 import "../styles/facturacion.css";
 
 const ROLES: { value: UserRole; label: string }[] = [
-  { value: "admin", label: "Administrador" },
+  { value: "admin_a", label: "AdministradorA" },
+  { value: "admin_b", label: "AdministradorB" },
   { value: "operador", label: "Operador" },
   { value: "lector", label: "Lector" }
 ];
@@ -55,7 +56,7 @@ export function UsuariosPage() {
   }, []);
 
   useEffect(() => {
-    if (currentUser?.role === "admin") loadActivity();
+    if (currentUser?.role === "admin_a" || currentUser?.role === "admin_b") loadActivity();
   }, [currentUser?.role]);
 
   function openNew() {
@@ -124,7 +125,7 @@ export function UsuariosPage() {
       .catch((err) => showToast(err instanceof Error ? err.message : "Error al eliminar", "error"));
   }
 
-  const isAdmin = currentUser?.role === "admin";
+  const isAdmin = currentUser?.role === "admin_a" || currentUser?.role === "admin_b";
 
   return (
     <div className="fact-page">
@@ -137,7 +138,7 @@ export function UsuariosPage() {
             ) : (
               <>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <p className="text-muted small mb-0">Usuarios identificados por correo. Rol: Administrador, Operador o Lector.</p>
+                  <p className="text-muted small mb-0">Usuarios identificados por correo. Roles: AdministradorA, AdministradorB, Operador o Lector.</p>
                   <button type="button" className="fact-btn fact-btn-primary" onClick={openNew}>
                     Nuevo usuario
                   </button>
@@ -170,7 +171,7 @@ export function UsuariosPage() {
                               <button type="button" className="btn btn-sm btn-outline-primary me-1" onClick={() => openEdit(u)}>
                                 Editar
                               </button>
-                              {currentUser?.id !== u.id && (
+                              {currentUser && currentUser.id !== u.id && canDeleteAdminUser(currentUser.role, u.role) && (
                                 <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(u)}>
                                   Eliminar
                                 </button>
@@ -269,13 +270,13 @@ export function UsuariosPage() {
                   <div className="mb-3">
                     <label className="form-label">Rol</label>
                     <select className="form-select" value={formRole} onChange={(e) => setFormRole(e.target.value as UserRole)}>
-                      {ROLES.map((r) => (
+                      {ROLES.filter((r) => r.value !== "admin_a" || currentUser?.role === "admin_a").map((r) => (
                         <option key={r.value} value={r.value}>
                           {r.label}
                         </option>
                       ))}
                     </select>
-                    <small className="text-muted">Administrador: todo; Operador: facturación y clientes; Lector: solo consulta.</small>
+                    <small className="text-muted">AdministradorA: todo (incl. eliminar otros admins); AdministradorB: todo salvo eso; Operador: facturación y clientes; Lector: solo consulta.</small>
                   </div>
                 </div>
                 <div className="modal-footer">

@@ -75,13 +75,14 @@ export function FacturacionPage() {
   const [relatedInvoiceId, setRelatedInvoiceId] = useState<string>("");
   const [paymentDate, setPaymentDate] = useState<string>("");
 
+  const [invoices, setInvoices] = useState<Invoice[]>(() => loadInvoices());
+
   useEffect(() => {
     getClients()
       .then((r) => setClients((r.clients ?? []) as Client[]))
       .catch(() => setClients([]));
   }, []);
 
-  const invoices = useMemo(() => loadInvoices(), []);
   const number = useMemo(() => nextNumber(type, invoices), [type, invoices]);
   const totals = useMemo(() => calcTotals(items), [items]);
 
@@ -340,6 +341,7 @@ export function FacturacionPage() {
     const hist = loadInvoices();
     hist.push(inv);
     saveInvoices(hist);
+    setInvoices(loadInvoices());
     setItems([]);
     setRelatedInvoiceId("");
     setPaymentDate("");

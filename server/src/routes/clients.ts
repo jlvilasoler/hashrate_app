@@ -40,7 +40,7 @@ clientsRouter.get("/clients", (_req, res) => {
   res.json({ clients: rows });
 });
 
-clientsRouter.post("/clients", requireRole("admin", "operador"), (req, res) => {
+clientsRouter.post("/clients", requireRole("admin_a", "admin_b", "operador"), (req, res) => {
   const parsed = ClientCreateSchema.safeParse(req.body);
   if (!parsed.success) {
     return res
@@ -76,7 +76,7 @@ clientsRouter.post("/clients", requireRole("admin", "operador"), (req, res) => {
   }
 });
 
-clientsRouter.put("/clients/:id", requireRole("admin", "operador"), (req, res) => {
+clientsRouter.put("/clients/:id", requireRole("admin_a", "admin_b", "operador"), (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
     return res.status(400).json({ error: { message: "Invalid id" } });
@@ -156,12 +156,12 @@ clientsRouter.put("/clients/:id", requireRole("admin", "operador"), (req, res) =
   }
 });
 
-clientsRouter.delete("/clients-all", requireRole("admin"), (req, res) => {
+clientsRouter.delete("/clients-all", requireRole("admin_a", "admin_b"), (req, res) => {
   db.prepare("DELETE FROM clients").run();
   res.status(204).send();
 });
 
-clientsRouter.delete("/clients/:id", requireRole("admin"), (req, res) => {
+clientsRouter.delete("/clients/:id", requireRole("admin_a", "admin_b"), (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
     return res.status(400).json({ error: { message: "Invalid id" } });

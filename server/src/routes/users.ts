@@ -9,17 +9,17 @@ export const usersRouter = Router();
 const CreateUserSchema = z.object({
   email: z.string().email().max(200),
   password: z.string().min(6).max(100),
-  role: z.enum(["admin", "operador", "lector"])
+  role: z.enum(["admin_a", "admin_b", "operador", "lector"])
 });
 
 const UpdateUserSchema = z.object({
   email: z.string().email().max(200).optional(),
   password: z.string().min(6).max(100).optional(),
-  role: z.enum(["admin", "operador", "lector"]).optional()
+  role: z.enum(["admin_a", "admin_b", "operador", "lector"]).optional()
 });
 
 /** Listar usuarios (solo admin) - devuelve id, email, role, created_at (sin password) */
-usersRouter.get("/users", requireAuth, requireRole("admin"), (req, res) => {
+usersRouter.get("/users", requireAuth, requireRole("admin_a", "admin_b"), (req, res) => {
   const rows = db.prepare("SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC").all() as Array<{
     id: number;
     username: string;
@@ -37,12 +37,15 @@ usersRouter.get("/users", requireAuth, requireRole("admin"), (req, res) => {
 });
 
 /** Crear usuario (solo admin) */
-usersRouter.post("/users", requireAuth, requireRole("admin"), (req, res) => {
+usersRouter.post("/users", requireAuth, requireRole("admin_a", "admin_b"), (req, res) => {
   const parsed = CreateUserSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: { message: "Datos inválidos", details: parsed.error.flatten() } });
   }
   const { email, password, role } = parsed.data;
+  if (role === "admin_a" && req.user!.role !== "admin_a") {
+    return res.status(403).json({ error: { message: "Solo AdministradorA puede crear cuentas con rol AdministradorA" } });
+  }
   const emailNorm = email.trim().toLowerCase();
   const hash = bcrypt.hashSync(password, 10);
   try {
@@ -59,7 +62,7 @@ usersRouter.post("/users", requireAuth, requireRole("admin"), (req, res) => {
 });
 
 /** Actualizar usuario (solo admin); no puede quitarse su propio rol admin */
-usersRouter.put("/users/:id", requireAuth, requireRole("admin"), (req, res) => {
+usersRouter.put("/users/:id", requireAuth, requireRole("admin_a", "admin_b"), (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
     return res.status(400).json({ error: { message: "ID inválido" } });
@@ -71,6 +74,9 @@ usersRouter.put("/users/:id", requireAuth, requireRole("admin"), (req, res) => {
   const existing = db.prepare("SELECT id, email, role FROM users WHERE id = ?").get(id) as { id: number; email: string; role: string } | undefined;
   if (!existing) {
     return res.status(404).json({ error: { message: "Usuario no encontrado" } });
+  }
+  if (parsed.data.role === "admin_a" && req.user!.role !== "admin_a") {
+    return res.status(403).json({ error: { message: "Solo AdministradorA puede asignar el rol AdministradorA" } });
   }
   const updates: string[] = [];
   const values: unknown[] = [];
@@ -84,7 +90,8 @@ usersRouter.put("/users/:id", requireAuth, requireRole("admin"), (req, res) => {
     values.push(bcrypt.hashSync(parsed.data.password, 10));
   }
   if (parsed.data.role !== undefined) {
-    if (req.user!.id === id && parsed.data.role !== "admin") {
+    const isAdminRole = (r: string) => r === "admin_a" || r === "admin_b";
+    if (req.user!.id === id && isAdminRole(existing.role) && !isAdminRole(parsed.data.role)) {
       return res.status(400).json({ error: { message: "No puede quitarse su propio rol de administrador" } });
     }
     updates.push("role = ?");
@@ -101,7 +108,7 @@ usersRouter.put("/users/:id", requireAuth, requireRole("admin"), (req, res) => {
 });
 
 /** Listar actividad de usuarios (solo admin): entradas/salidas, horarios, tiempo conectado, IP */
-usersRouter.get("/users/activity", requireAuth, requireRole("admin"), (req, res) => {
+usersRouter.get("/users/activity", requireAuth, requireRole("admin_a", "admin_b"), (req, res) => {
   const limit = Math.min(Math.max(1, Number(req.query.limit) || 100), 500);
   const rows = db
     .prepare(
@@ -136,8 +143,8 @@ usersRouter.get("/users/activity", requireAuth, requireRole("admin"), (req, res)
   res.json({ activity });
 });
 
-/** Eliminar usuario (solo admin); no puede eliminarse a sí mismo */
-usersRouter.delete("/users/:id", requireAuth, requireRole("admin"), (req, res) => {
+/** Eliminar usuario (solo admin). Solo AdministradorA puede eliminar cuentas con rol AdministradorA o AdministradorB. */
+usersRouter.delete("/users/:id", requireAuth, requireRole("admin_a", "admin_b"), (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
     return res.status(400).json({ error: { message: "ID inválido" } });
@@ -145,9 +152,13 @@ usersRouter.delete("/users/:id", requireAuth, requireRole("admin"), (req, res) =
   if (req.user!.id === id) {
     return res.status(400).json({ error: { message: "No puede eliminarse a sí mismo" } });
   }
-  const info = db.prepare("DELETE FROM users WHERE id = ?").run(id);
-  if (info.changes === 0) {
+  const target = db.prepare("SELECT id, role FROM users WHERE id = ?").get(id) as { id: number; role: string } | undefined;
+  if (!target) {
     return res.status(404).json({ error: { message: "Usuario no encontrado" } });
   }
+  if ((target.role === "admin_a" || target.role === "admin_b") && req.user!.role !== "admin_a") {
+    return res.status(403).json({ error: { message: "Solo AdministradorA puede eliminar cuentas de administrador" } });
+  }
+  db.prepare("DELETE FROM users WHERE id = ?").run(id);
   res.status(204).send();
 });

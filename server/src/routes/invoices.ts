@@ -64,7 +64,7 @@ invoicesRouter.get("/invoices", (req, res) => {
   res.json({ invoices });
 });
 
-invoicesRouter.post("/invoices", requireRole("admin", "operador"), (req, res) => {
+invoicesRouter.post("/invoices", requireRole("admin_a", "admin_b", "operador"), (req, res) => {
   const parsed = InvoiceCreateSchema.safeParse(req.body);
   if (!parsed.success) {
     return res
@@ -117,7 +117,7 @@ invoicesRouter.post("/invoices", requireRole("admin", "operador"), (req, res) =>
   }
 });
 
-invoicesRouter.delete("/invoices/:id", requireRole("admin"), (req, res) => {
+invoicesRouter.delete("/invoices/:id", requireRole("admin_a", "admin_b"), (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
     return res.status(400).json({ error: { message: "Invalid id" } });

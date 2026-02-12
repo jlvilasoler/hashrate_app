@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import "../styles/hrshome.css";
 
 const menuItems: Array<{ to: string; icon: string; label: string; desc: string; roles?: string[] }> = [
-  { to: "/facturacion", icon: "bi-receipt", label: "Facturación", desc: "Emitir facturas, recibos y notas de crédito", roles: ["admin", "operador"] },
+  { to: "/facturacion", icon: "bi-receipt", label: "Facturación", desc: "Emitir facturas, recibos y notas de crédito", roles: ["admin_a", "admin_b", "operador"] },
   { to: "/historial", icon: "bi-clock-history", label: "Historial", desc: "Ver y gestionar comprobantes" },
   { to: "/clientes", icon: "bi-people", label: "Clientes", desc: "Administrar cartera de clientes" },
   { to: "/reportes", icon: "bi-graph-up", label: "Reportes", desc: "Estadísticas y análisis" }
@@ -49,7 +49,7 @@ export function HomePage() {
               <p className="hrs-home-card-desc">{item.desc}</p>
             </Link>
           ))}
-          {user?.role === "admin" && (
+          {(user?.role === "admin_a" || user?.role === "admin_b") && (
             <Link to="/usuarios" className="hrs-home-card hrs-home-card-admin">
               <div className="hrs-home-card-icon">
                 <i className="bi bi-shield-lock" />
