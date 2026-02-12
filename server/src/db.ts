@@ -63,27 +63,33 @@ CREATE INDEX IF NOT EXISTS idx_user_activity_user_created ON user_activity(user_
 // Migrar roles antiguos admin -> admin_a (jv@hashrate.space) / admin_b (resto)
 const hasLegacyAdmin = db.prepare("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1").get();
 if (hasLegacyAdmin) {
-  db.exec(`
-    CREATE TABLE users_new (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL UNIQUE,
-      email TEXT UNIQUE,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK (role IN ('admin_a', 'admin_b', 'operador', 'lector')),
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-    INSERT INTO users_new (id, username, email, password_hash, role, created_at)
-    SELECT id, username, email, password_hash,
-      CASE
-        WHEN LOWER(TRIM(COALESCE(username, ''))) = 'jv@hashrate.space' OR LOWER(TRIM(COALESCE(email, ''))) = 'jv@hashrate.space' THEN 'admin_a'
-        WHEN role = 'admin' THEN 'admin_b'
-        ELSE role
-      END,
-      created_at
-    FROM users;
-    DROP TABLE users;
-    ALTER TABLE users_new RENAME TO users;
-  `);
+  db.exec(`DROP TABLE IF EXISTS users_new;`);
+  db.exec(`PRAGMA foreign_keys = OFF;`);
+  try {
+    db.exec(`
+      CREATE TABLE users_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        email TEXT UNIQUE,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('admin_a', 'admin_b', 'operador', 'lector')),
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO users_new (id, username, email, password_hash, role, created_at)
+      SELECT id, username, email, password_hash,
+        CASE
+          WHEN LOWER(TRIM(COALESCE(username, ''))) = 'jv@hashrate.space' OR LOWER(TRIM(COALESCE(email, ''))) = 'jv@hashrate.space' THEN 'admin_a'
+          WHEN role = 'admin' THEN 'admin_b'
+          ELSE role
+        END,
+        created_at
+      FROM users;
+      DROP TABLE users;
+      ALTER TABLE users_new RENAME TO users;
+    `);
+  } finally {
+    db.exec(`PRAGMA foreign_keys = ON;`);
+  }
 }
 
 ["phone", "email", "address", "city", "email2", "name2", "phone2", "address2", "city2"].forEach((col) => {
