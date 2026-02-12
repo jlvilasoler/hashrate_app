@@ -21,6 +21,12 @@ const ROLES: { value: UserRole; label: string }[] = [
   { value: "lector", label: "Lector" }
 ];
 
+/** AdministradorB ve "Administrador" en lugar de "AdministradorA" para usuarios de grado superior. */
+function getRoleDisplayLabel(role: string, viewerRole: UserRole | undefined): string {
+  if (viewerRole === "admin_b" && role === "admin_a") return "Administrador";
+  return ROLES.find((r) => r.value === role)?.label ?? role;
+}
+
 export function UsuariosPage() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserListItem[]>([]);
@@ -165,7 +171,7 @@ export function UsuariosPage() {
                         {users.map((u) => (
                           <tr key={u.id}>
                             <td>{u.email}</td>
-                            <td>{ROLES.find((r) => r.value === u.role)?.label ?? u.role}</td>
+                            <td>{getRoleDisplayLabel(u.role, currentUser?.role)}</td>
                             <td>{u.created_at ? new Date(u.created_at).toLocaleDateString() : "-"}</td>
                             <td className="text-center">
                               <button type="button" className="btn btn-sm btn-outline-primary me-1" onClick={() => openEdit(u)}>
@@ -270,6 +276,9 @@ export function UsuariosPage() {
                   <div className="mb-3">
                     <label className="form-label">Rol</label>
                     <select className="form-select" value={formRole} onChange={(e) => setFormRole(e.target.value as UserRole)}>
+                      {modal !== "new" && (modal as UserListItem).role === "admin_a" && currentUser?.role === "admin_b" && (
+                        <option value="admin_a" disabled>Administrador</option>
+                      )}
                       {ROLES.filter((r) => r.value !== "admin_a" || currentUser?.role === "admin_a").map((r) => (
                         <option key={r.value} value={r.value}>
                           {r.label}
